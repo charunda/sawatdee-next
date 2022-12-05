@@ -1,8 +1,22 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import React, { useState } from "react";
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { Button, Input, Grid, Card, Text, Spacer } from "@nextui-org/react";
+import useSWR from "swr";
+import { authen } from "./hooks/Auth";
 
 export default function Home() {
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+  });
+  const { data, error } = useSWR({ form: form }, authen);
+  const onClickSubmit = () => {
+    authen(form);
+  };
+  const onChangeInput = (value, name) => {
+    setForm({ ...form, [name]: value });
+  };
   return (
     <div className={styles.container}>
       <Head>
@@ -12,7 +26,74 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
+        <Card css={{ p: "$6", mw: "400px" }}>
+          <Card.Header>
+            <img
+              alt="nextui logo"
+              src="https://investor.dohome.co.th/storage/logo/logo.png"
+              width="60px"
+              height="40px"
+            />
+            <Grid.Container css={{ pl: "$6" }}>
+              <Grid xs={12}>
+                <Text h4 css={{ lineHeight: "$xs" }}>
+                  เข้าสู่ระบบ
+                </Text>
+              </Grid>
+              <Grid xs={12}>
+                <Text css={{ color: "$accents8" }}>Dohome</Text>
+              </Grid>
+            </Grid.Container>
+          </Card.Header>
+          <Card.Body css={{ py: "$2" }}>
+            <Input
+              onChange={(e) => onChangeInput(e.target.value, "username")}
+              color="warning"
+              clearable
+              helperText="Please enter your username"
+              label="Username"
+              placeholder="Enter your username"
+            />
+            <Spacer y={2} />
+            <Input
+              onChange={(e) => onChangeInput(e.target.value, "password")}
+              color="warning"
+              clearable
+              helperText="Insecure password"
+              type="password"
+              label="Password"
+              placeholder="Enter your password"
+            />
+          </Card.Body>
+          <Card.Footer>
+            <Button
+              onClick={onClickSubmit}
+              style={{ width: "100%" }}
+              shadow
+              color="primary"
+              auto
+            >
+              Login
+            </Button>
+          </Card.Footer>
+        </Card>
+        {/* <Grid.Container gap={2} justify="center">
+          <Grid xs={5}>
+          
+          </Grid>
+          <Grid xs={5}>
+            <Input.Password
+              labelPlaceholder="Custom icons"
+              visibleIcon={<UnLockIcon fill="currentColor" />}
+              hiddenIcon={<LockIcon fill="currentColor" />}
+            />
+          </Grid>
+          <Grid xs={2}>
+            <Button>Login</Button>
+          </Grid>
+        </Grid.Container> */}
+
+        {/* <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
 
@@ -51,10 +132,10 @@ export default function Home() {
               Instantly deploy your Next.js site to a public URL with Vercel.
             </p>
           </a>
-        </div>
+        </div> */}
       </main>
 
-      <footer className={styles.footer}>
+      {/* <footer className={styles.footer}>
         <a
           href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
           target="_blank"
@@ -65,7 +146,7 @@ export default function Home() {
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
-      </footer>
+      </footer> */}
     </div>
-  )
+  );
 }
