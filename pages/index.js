@@ -1,22 +1,74 @@
 import React, { useState } from "react";
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
-import { Button, Input, Grid, Card, Text, Spacer } from "@nextui-org/react";
+import {
+  Button,
+  Input,
+  Grid,
+  Card,
+  Text,
+  Spacer,
+  Loading,
+} from "@nextui-org/react";
 import useSWR from "swr";
-import { authen } from "./hooks/Auth";
+
+const authenHost = "https://api-internal-sit.dohome.technology";
+const host = `${authenHost}/authen-gm/oauth2/login`;
 
 export default function Home() {
   const [form, setForm] = useState({
     username: "",
     password: "",
+    moduleId: "web-authen",
   });
-  const { data, error } = useSWR({ form: form }, authen);
-  const onClickSubmit = () => {
-    authen(form);
+  const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    userId: "",
+    userName: "",
+    positionName: "",
+  });
+  const authenReq = (...args) =>
+    fetch(...args)
+      .then((res) => {
+        return res.json();
+      })
+      .catch((err) => {
+        return err;
+      });
+  const { data, mutate } = useSWR({ form: form }, authenReq, {
+    revalidateOnFocus: false,
+  });
+
+  const onClickSubmit = async () => {
+    setLoading(true);
+    const response = await authenReq(host, {
+      method: "POST",
+      body: JSON.stringify(form),
+    });
+    mutate(authenReq);
+    setLoading(false);
+    setUserInfo({ ...response.userInfo });
   };
   const onChangeInput = (value, name) => {
     setForm({ ...form, [name]: value });
   };
+  const onClickLogout = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setUserInfo({
+        userId: "",
+        userName: "",
+        positionName: "",
+      });
+      setForm({
+        username: "",
+        password: "",
+        moduleId: "web-authen",
+      });
+      setLoading(false);
+    }, 1000);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -26,127 +78,115 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <Card css={{ p: "$6", mw: "400px" }}>
-          <Card.Header>
-            <img
-              alt="nextui logo"
-              src="https://investor.dohome.co.th/storage/logo/logo.png"
-              width="60px"
-              height="40px"
-            />
-            <Grid.Container css={{ pl: "$6" }}>
-              <Grid xs={12}>
-                <Text h4 css={{ lineHeight: "$xs" }}>
-                  เข้าสู่ระบบ
-                </Text>
-              </Grid>
-              <Grid xs={12}>
-                <Text css={{ color: "$accents8" }}>Dohome</Text>
-              </Grid>
-            </Grid.Container>
-          </Card.Header>
-          <Card.Body css={{ py: "$2" }}>
-            <Input
-              onChange={(e) => onChangeInput(e.target.value, "username")}
-              color="warning"
-              clearable
-              helperText="Please enter your username"
-              label="Username"
-              placeholder="Enter your username"
-            />
-            <Spacer y={2} />
-            <Input
-              onChange={(e) => onChangeInput(e.target.value, "password")}
-              color="warning"
-              clearable
-              helperText="Insecure password"
-              type="password"
-              label="Password"
-              placeholder="Enter your password"
-            />
-          </Card.Body>
-          <Card.Footer>
-            <Button
-              onClick={onClickSubmit}
-              style={{ width: "100%" }}
-              shadow
-              color="primary"
-              auto
-            >
-              Login
-            </Button>
-          </Card.Footer>
-        </Card>
-        {/* <Grid.Container gap={2} justify="center">
-          <Grid xs={5}>
-          
-          </Grid>
-          <Grid xs={5}>
-            <Input.Password
-              labelPlaceholder="Custom icons"
-              visibleIcon={<UnLockIcon fill="currentColor" />}
-              hiddenIcon={<LockIcon fill="currentColor" />}
-            />
-          </Grid>
-          <Grid xs={2}>
-            <Button>Login</Button>
-          </Grid>
-        </Grid.Container> */}
-
-        {/* <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div> */}
+        {userInfo.userId ? (
+          <Card css={{ p: "$6", mw: "400px" }}>
+            <Card.Header>
+              <img
+                alt="nextui logo"
+                src="https://investor.dohome.co.th/storage/logo/logo.png"
+                width="60px"
+                height="40px"
+              />
+              <Grid.Container css={{ pl: "$6" }}>
+                <Grid xs={12}>
+                  <Text h4 css={{ lineHeight: "$xs" }}>
+                    ยินดีต้อนรับ
+                  </Text>
+                </Grid>
+                <Grid xs={12}>
+                  <Text css={{ color: "$accents8" }}>Dohome</Text>
+                </Grid>
+              </Grid.Container>
+            </Card.Header>
+            <Card.Body css={{ py: "$2" }}>
+              <Input
+                readOnly
+                color="warning"
+                clearable
+                label="Username"
+                value={`${userInfo.userName} - ${userInfo.userName}`}
+              />
+              <Spacer y={2} />
+              <Input
+                readOnly
+                color="warning"
+                clearable
+                label="ตำแหน่ง"
+                value={userInfo.positionName}
+              />
+            </Card.Body>
+            <Card.Footer>
+              <Button
+                onClick={onClickLogout}
+                style={{ width: "100%" }}
+                shadow
+                color="error"
+                auto
+              >
+                {loading ? (
+                  <Loading color="currentColor" size="sm" />
+                ) : (
+                  "Logout"
+                )}
+              </Button>
+            </Card.Footer>
+          </Card>
+        ) : (
+          <Card css={{ p: "$6", mw: "400px" }}>
+            <Card.Header>
+              <img
+                alt="nextui logo"
+                src="https://investor.dohome.co.th/storage/logo/logo.png"
+                width="60px"
+                height="40px"
+              />
+              <Grid.Container css={{ pl: "$6" }}>
+                <Grid xs={12}>
+                  <Text h4 css={{ lineHeight: "$xs" }}>
+                    เข้าสู่ระบบ
+                  </Text>
+                </Grid>
+                <Grid xs={12}>
+                  <Text css={{ color: "$accents8" }}>Dohome</Text>
+                </Grid>
+              </Grid.Container>
+            </Card.Header>
+            <Card.Body css={{ py: "$2" }}>
+              <Input
+                onChange={(e) => onChangeInput(e.target.value, "username")}
+                color="warning"
+                clearable
+                helperText="Please enter your username"
+                label="Username"
+                placeholder="Enter your username"
+                value={form.username}
+              />
+              <Spacer y={2} />
+              <Input
+                onChange={(e) => onChangeInput(e.target.value, "password")}
+                color="warning"
+                clearable
+                helperText="Insecure password"
+                type="password"
+                label="Password"
+                placeholder="Enter your password"
+                value={form.password}
+              />
+            </Card.Body>
+            <Card.Footer>
+              <Button
+                onClick={onClickSubmit}
+                style={{ width: "100%" }}
+                shadow
+                color="primary"
+                auto
+              >
+                {loading ? <Loading color="currentColor" size="sm" /> : "Login"}
+              </Button>
+            </Card.Footer>
+          </Card>
+        )}
       </main>
-
-      {/* <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer> */}
     </div>
   );
 }
